@@ -51,7 +51,6 @@ function renderButtons() {
         const btn = document.createElement('a');
         btn.className = 'app-button';
         btn.href = button.url;
-        btn.target = '_blank';
         btn.draggable = true;
         btn.dataset.id = button.id;
         btn.dataset.index = index;

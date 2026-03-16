@@ -1,6 +1,6 @@
 {
   "name": "myhomepage",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Simple homepage app with customizable application buttons",
   "main": "server.js",
   "scripts": {
