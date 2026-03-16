@@ -4,9 +4,13 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+// Load configuration
+const config = require('./config.json');
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || config.port || 3006;
 const DATA_FILE = path.join(__dirname, 'data', 'buttons.json');
+const BACKUP_FILE = path.join(__dirname, 'data', 'buttons.backup.json');
 
 // Middleware
 app.use(cors());
@@ -32,10 +36,10 @@ if (!fs.existsSync(dataDir)) {
 // Initialize default buttons if file doesn't exist
 if (!fs.existsSync(DATA_FILE)) {
     const defaultButtons = [
-        { id: 1, name: 'GitHub', url: 'https://github.com', color: '#333' },
-        { id: 2, name: 'Stack Overflow', url: 'https://stackoverflow.com', color: '#f48024' },
-        { id: 3, name: 'YouTube', url: 'https://youtube.com', color: '#ff0000' },
-        { id: 4, name: 'Gmail', url: 'https://gmail.com', color: '#ea4335' }
+        { id: 1, name: 'GitHub', url: 'https://github.com' },
+        { id: 2, name: 'Stack Overflow', url: 'https://stackoverflow.com' },
+        { id: 3, name: 'YouTube', url: 'https://youtube.com' },
+        { id: 4, name: 'Gmail', url: 'https://gmail.com' }
     ];
     fs.writeFileSync(DATA_FILE, JSON.stringify(defaultButtons, null, 2));
 }
@@ -66,7 +70,7 @@ app.get('/api/buttons', (req, res) => {
 // POST - Add a new button
 app.post('/api/buttons', (req, res) => {
     try {
-        const { name, url, color } = req.body;
+        const { name, url } = req.body;
         
         if (!url) {
             return res.status(400).json({ error: 'URL is required' });
@@ -97,8 +101,7 @@ app.post('/api/buttons', (req, res) => {
         const newButton = {
             id: Date.now(),
             name: buttonName,
-            url,
-            color: color || '#007bff'
+            url
         };
         
         buttons.push(newButton);
@@ -130,7 +133,7 @@ app.put('/api/buttons/reorder', (req, res) => {
 app.put('/api/buttons/:id', (req, res) => {
     try {
         const { id } = req.params;
-        const { name, url, color } = req.body;
+        const { name, url } = req.body;
         
         const buttons = getButtons();
         const index = buttons.findIndex(b => b.id == id);
@@ -142,8 +145,7 @@ app.put('/api/buttons/:id', (req, res) => {
         buttons[index] = {
             ...buttons[index],
             name: name || buttons[index].name,
-            url: url || buttons[index].url,
-            color: color || buttons[index].color
+            url: url || buttons[index].url
         };
         
         saveButtons(buttons);
@@ -171,6 +173,51 @@ app.delete('/api/buttons/:id', (req, res) => {
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete button' });
+    }
+});
+
+// POST - Save buttons to backup file
+app.post('/api/buttons/save', (req, res) => {
+    try {
+        const buttons = getButtons();
+        fs.writeFileSync(BACKUP_FILE, JSON.stringify(buttons, null, 2));
+        res.json({ success: true, message: 'Buttons saved to backup file' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to save buttons' });
+    }
+});
+
+// GET - Download buttons as JSON file
+app.get('/api/buttons/download', (req, res) => {
+    try {
+        const buttons = getButtons();
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', 'attachment; filename=buttons.json');
+        res.send(JSON.stringify(buttons, null, 2));
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to download buttons' });
+    }
+});
+
+// POST - Restore buttons from uploaded JSON file
+app.post('/api/buttons/restore', express.raw({ type: 'application/json', limit: '10mb' }), (req, res) => {
+    try {
+        const buttons = JSON.parse(req.body.toString());
+        if (!Array.isArray(buttons)) {
+            return res.status(400).json({ error: 'Invalid data format' });
+        }
+        
+        // If current data file exists, backup it with timestamp
+        if (fs.existsSync(DATA_FILE)) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const backupFile = path.join(__dirname, 'data', `backup_${timestamp}.json`);
+            fs.copyFileSync(DATA_FILE, backupFile);
+        }
+        
+        saveButtons(buttons);
+        res.json(buttons);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to restore buttons' });
     }
 });
 

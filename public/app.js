@@ -10,6 +10,8 @@ const modal = document.getElementById('modal');
 const modalTitle = document.getElementById('modalTitle');
 const buttonForm = document.getElementById('buttonForm');
 const cancelBtn = document.getElementById('cancelBtn');
+const nameInput = document.getElementById('name');
+const urlInput = document.getElementById('url');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', loadButtons);
@@ -64,7 +66,7 @@ function renderButtons() {
                 <button class="action-btn delete-btn" data-id="${button.id}" title="Delete">✕</button>
             </div>
             <img src="${faviconUrl}" alt="${button.name}" class="icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <span class="icon-text" style="display:none; background-color: ${button.color}">${initial}</span>
+            <span class="icon-text" style="display:none;">${initial}</span>
             <span class="name">${button.name}</span>
         `;
         
@@ -159,9 +161,8 @@ function openModal(button = null) {
     editingId = button ? button.id : null;
     modalTitle.textContent = button ? 'Edit Application' : 'Add Application';
     
-    document.getElementById('name').value = button ? button.name : '';
-    document.getElementById('url').value = button ? button.url : '';
-    document.getElementById('color').value = button ? button.color : '#007bff';
+    if (nameInput) nameInput.value = button ? button.name : '';
+    if (urlInput) urlInput.value = button ? button.url : '';
     
     modal.classList.add('active');
 }
@@ -176,9 +177,8 @@ function closeModal() {
 async function handleSubmit(e) {
     e.preventDefault();
     
-    const name = document.getElementById('name').value.trim();
-    const url = document.getElementById('url').value.trim();
-    const color = document.getElementById('color').value;
+    const name = nameInput ? nameInput.value.trim() : '';
+    const url = urlInput ? urlInput.value.trim() : '';
     
     if (!url) {
         alert('URL is required');
@@ -191,7 +191,7 @@ async function handleSubmit(e) {
             const response = await fetch(`/api/buttons/${editingId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, url, color })
+                body: JSON.stringify({ name, url })
             });
             
             if (response.ok) {
@@ -210,7 +210,7 @@ async function handleSubmit(e) {
             const response = await fetch('/api/buttons', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, url, color })
+                body: JSON.stringify({ name, url })
             });
             
             if (response.ok) {
@@ -238,8 +238,6 @@ function editButton(button) {
 
 // Delete Button
 async function deleteButton(id) {
-    if (!confirm('Are you sure you want to delete this application?')) return;
-    
     try {
         await fetch(`/api/buttons/${id}`, {
             method: 'DELETE'
@@ -250,4 +248,41 @@ async function deleteButton(id) {
     } catch (error) {
         console.error('Failed to delete button:', error);
     }
+}
+
+// Save buttons to file (download)
+function saveButtons() {
+    window.location.href = '/api/buttons/download';
+}
+
+// Restore buttons from file
+function restoreButtons(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const buttons = JSON.parse(e.target.result);
+            const response = await fetch('/api/buttons/restore', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(buttons)
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                buttons = Array.isArray(data) ? data : [];
+                renderButtons();
+                alert('Buttons restored from file!');
+            } else {
+                alert('Failed to restore buttons');
+            }
+        } catch (error) {
+            console.error('Failed to restore buttons:', error);
+            alert('Failed to restore buttons');
+        }
+    };
+    reader.readAsText(file);
+    input.value = '';
 }

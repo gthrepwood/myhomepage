@@ -11,7 +11,7 @@ fi
 
 echo ""
 echo "MyHomepage is running!"
-echo "Open http://localhost:3000 in your browser"
+echo "Open http://localhost:3005 in your browser"
 echo ""
 echo "To view logs: docker-compose logs -f"
 echo "To stop: docker-compose down"

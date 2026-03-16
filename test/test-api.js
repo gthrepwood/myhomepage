@@ -1,12 +1,13 @@
 // API Test Script
 const http = require('http');
+const PORT = require('../config.json').port || 3006;
 
 function makeRequest(url, method = 'GET', data = null) {
     return new Promise((resolve, reject) => {
         const urlObj = new URL(url);
         const options = {
             hostname: urlObj.hostname,
-            port: urlObj.port || 3000,
+            port: urlObj.port || PORT,
             path: urlObj.pathname,
             method: method,
             headers: data ? { 'Content-Type': 'application/json' } : {}
@@ -38,7 +39,7 @@ async function runTests() {
     
     // Test 1: Get all buttons
     try {
-        const res = await makeRequest('http://localhost:3000/api/buttons');
+        const res = await makeRequest(`http://localhost:${PORT}/api/buttons`);
         if (res.status === 200 && Array.isArray(res.data)) {
             console.log('✓ Test 1 PASSED: GET /api/buttons returns array');
             passed++;
@@ -53,7 +54,7 @@ async function runTests() {
     
     // Test 2: Add new button with name
     try {
-        const res = await makeRequest('http://localhost:3000/api/buttons', 'POST', {
+        const res = await makeRequest(`http://localhost:${PORT}/api/buttons`, 'POST', {
             name: 'Test Button',
             url: 'https://test-example.com',
             color: '#ff0000'
@@ -72,7 +73,7 @@ async function runTests() {
     
     // Test 3: Add button without name (auto-generate)
     try {
-        const res = await makeRequest('http://localhost:3000/api/buttons', 'POST', {
+        const res = await makeRequest(`http://localhost:${PORT}/api/buttons`, 'POST', {
             url: 'https://example.com'
         });
         if (res.status === 201 && res.data.name === 'Example.com') {
@@ -89,7 +90,7 @@ async function runTests() {
     
     // Test 4: Add button without www prefix
     try {
-        const res = await makeRequest('http://localhost:3000/api/buttons', 'POST', {
+        const res = await makeRequest(`http://localhost:${PORT}/api/buttons`, 'POST', {
             url: 'https://www.google.com'
         });
         if (res.status === 201 && res.data.name === 'Google.com') {
@@ -106,7 +107,7 @@ async function runTests() {
     
     // Test 5: Prevent duplicate URL
     try {
-        const res = await makeRequest('http://localhost:3000/api/buttons', 'POST', {
+        const res = await makeRequest(`http://localhost:${PORT}/api/buttons`, 'POST', {
             url: 'https://test-example.com'
         });
         if (res.status === 400 && res.data.error && res.data.error.includes('already exists')) {
@@ -123,7 +124,7 @@ async function runTests() {
     
     // Test 6: URL without name required
     try {
-        const res = await makeRequest('http://localhost:3000/api/buttons', 'POST', {
+        const res = await makeRequest(`http://localhost:${PORT}/api/buttons`, 'POST', {
             name: 'No URL Button'
         });
         if (res.status === 400 && res.data.error && res.data.error.includes('URL is required')) {
@@ -140,7 +141,7 @@ async function runTests() {
     
     // Test 7: System info API
     try {
-        const res = await makeRequest('http://localhost:3000/api/system-info');
+        const res = await makeRequest(`http://localhost:${PORT}/api/system-info`);
         if (res.status === 200 && res.data.username && res.data.homeDir) {
             console.log('✓ Test 7 PASSED: GET /api/system-info works');
             passed++;
@@ -155,7 +156,7 @@ async function runTests() {
     
     // Test 8: Case-insensitive duplicate check
     try {
-        const res = await makeRequest('http://localhost:3000/api/buttons', 'POST', {
+        const res = await makeRequest(`http://localhost:${PORT}/api/buttons`, 'POST', {
             url: 'HTTPS://EXAMPLE.COM'
         });
         if (res.status === 400 && res.data.error && res.data.error.includes('already exists')) {

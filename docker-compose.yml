@@ -4,7 +4,22 @@ services:
   myhomepage:
     build: .
     ports:
-      - "3000:3000"
+      - "3006:3006"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
+    environment:
+      - PORT=3006
+version: '3.8'
+
+services:
+  myhomepage:
+    image: docker.io/gthrepwood/myhomepage:latest
+    ports:
+      - "3006:3006"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    labels:
+      - "net.unraid.docker.managed=composeman"
+      - "net.unraid.docker.webui=http://[IP]:[PORT:3006]/"

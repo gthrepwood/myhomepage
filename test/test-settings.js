@@ -1,9 +1,17 @@
 // Test script to verify settings.html is working correctly
 const http = require('http');
+const PORT = require('../config.json').port || 3006;
 
 function makeRequest(url) {
     return new Promise((resolve, reject) => {
-        http.get(url, (res) => {
+        const urlObj = new URL(url);
+        const options = {
+            hostname: urlObj.hostname,
+            port: urlObj.port || PORT,
+            path: urlObj.pathname
+        };
+        
+        http.get(options, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => resolve({ status: res.statusCode, data }));
@@ -19,7 +27,7 @@ async function runTests() {
     
     // Test 1: Check if server is running
     try {
-        const res = await makeRequest('http://localhost:3000/docs/settings.html');
+        const res = await makeRequest(`http://localhost:${PORT}/docs/settings.html`);
         if (res.status === 200) {
             console.log('✓ Test 1 PASSED: Server is running and docs/settings.html loads');
             passed++;
@@ -34,7 +42,7 @@ async function runTests() {
     
     // Test 2: Check for dark/light button
     try {
-        const res = await makeRequest('http://localhost:3000/docs/settings.html');
+        const res = await makeRequest(`http://localhost:${PORT}/docs/settings.html`);
         const html = res.data;
         
         if (html.includes('theme-toggle') && html.includes('toggleTheme')) {
@@ -51,7 +59,7 @@ async function runTests() {
     
     // Test 3: Check for Bootstrap CSS
     try {
-        const res = await makeRequest('http://localhost:3000/docs/settings.html');
+        const res = await makeRequest(`http://localhost:${PORT}/docs/settings.html`);
         const html = res.data;
         
         if (html.includes('bootstrap')) {
@@ -68,7 +76,7 @@ async function runTests() {
     
     // Test 4: Check for system-info API endpoint
     try {
-        const res = await makeRequest('http://localhost:3000/api/system-info');
+        const res = await makeRequest(`http://localhost:${PORT}/api/system-info`);
         const data = JSON.parse(res.data);
         
         if (data.homeDir && data.username) {
@@ -85,7 +93,7 @@ async function runTests() {
     
     // Test 5: Check for favicon
     try {
-        const res = await makeRequest('http://localhost:3000/favicon.ico');
+        const res = await makeRequest(`http://localhost:${PORT}/favicon.ico`);
         if (res.status === 200) {
             console.log('✓ Test 5 PASSED: favicon.ico is accessible');
             passed++;
@@ -100,7 +108,7 @@ async function runTests() {
     
     // Test 6: Check CSS for button visibility
     try {
-        const res = await makeRequest('http://localhost:3000/docs/settings.html');
+        const res = await makeRequest(`http://localhost:${PORT}/docs/settings.html`);
         const html = res.data;
         
         // Check for key CSS properties that make button visible
@@ -127,7 +135,7 @@ async function runTests() {
     
     if (failed === 0) {
         console.log('\nAll tests passed! The dark/light button should be visible.');
-        console.log('Open http://localhost:3000/docs/settings.html in your browser.');
+        console.log('Open http://localhost:' + PORT + '/docs/settings.html in your browser.');
     } else {
         console.log('\nSome tests failed. Please check the errors above.');
     }
