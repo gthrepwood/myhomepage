@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>npm Global Configuration</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 40px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .card {
+            background-color: #16213e;
+            border-color: #0f3460;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .card-header {
+            border-bottom-color: #0f3460;
+        }
+        
+        body.dark-mode .list-group-item {
+            background-color: #16213e;
+            border-color: #0f3460;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .list-group-item:hover {
+            background-color: #1f4068;
+        }
+        
+        body.dark-mode .list-group-item p {
+            color: #a0a0a0 !important;
+        }
+        
+        body.dark-mode .form-control {
+            background-color: #1f4068;
+            border-color: #0f3460;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .form-control:focus {
+            background-color: #1f4068;
+            border-color: #0d6efd;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .btn-outline-secondary {
+            border-color: #0f3460;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .btn-outline-secondary:hover {
+            background-color: #1f4068;
+            border-color: #0f3460;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .alert-info {
+            background-color: #1f4068;
+            border-color: #0f3460;
+            color: #a0d2ff;
+        }
+        
+        body.dark-mode .alert-warning {
+            background-color: #4a3f2f;
+            border-color: #5c4a1f;
+            color: #ffd54f;
+        }
+        
+        body.dark-mode .text-muted {
+            color: #a0a0a0 !important;
+        }
+        
+        .config-card {
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .prefix-display {
+            font-family: monospace;
+            font-size: 1.1em;
+            color: #0d6efd;
+        }
+        
+        body.dark-mode .prefix-display {
+            color: #6ea8fe;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .theme-toggle .btn {
+            border-radius: 50% !important;
+            width: 55px !important;
+            height: 55px !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 1.5rem !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+            border: 3px solid #ffffff !important;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle">
+        <button class="btn btn-primary" onclick="toggleTheme()" id="themeBtn" title="Toggle dark/light mode">
+            🌙
+        </button>
+    </div>
+
+    <div class="container">
+        <div class="card config-card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">npm Global Configuration</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Current Status:</strong>
+                    <span id="currentPrefix" class="prefix-display">Loading...</span>
+                </div>
+                
+                <hr>
+                
+                <h5 class="mb-3">Select Installation Location</h5>
+                
+                <div class="list-group mb-3">
+                    <button class="list-group-item list-group-item-action" onclick="setPrefix('home')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">User Home Folder</h6>
+                            <small class="text-success">Recommended</small>
+                        </div>
+                        <p class="mb-1 text-muted">
+                            <span id="homePath">Detecting...</span>
+                        </p>
+                    </button>
+                    
+                    <button class="list-group-item list-group-item-action" onclick="setPrefix('appdata')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">AppData (Default)</h6>
+                            <small class="text-muted">Windows default</small>
+                        </div>
+                        <p class="mb-1 text-muted">
+                            <span id="appdataPath">Detecting...</span>
+                        </p>
+                    </button>
+                    
+                    <button class="list-group-item list-group-item-action" onclick="setPrefix('custom')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Custom Location</h6>
+                            <small class="text-warning">Advanced</small>
+                        </div>
+                        <p class="mb-1 text-muted">Specify your own path</p>
+                    </button>
+                </div>
+                
+                <div id="customPathInput" class="input-group mb-3" style="display: none;">
+                    <input type="text" class="form-control" id="customPath" placeholder="Enter custom path">
+                    <button class="btn btn-primary" type="button" onclick="applyCustomPath()">Apply</button>
+                </div>
+                
+                <hr>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-secondary" onclick="refreshStatus()">
+                        Refresh Status
+                    </button>
+                </div>
+                
+                <div id="message" class="alert mt-3" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <div class="card config-card mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">What This Does</h5>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li><strong>Global packages</strong> (installed with <code>npm install -g</code>) will be stored in the selected location</li>
+                    <li><strong>Local project packages</strong> still go in your project's <code>node_modules</code> folder</li>
+                    <li>Changes require administrator/elevated privileges on some systems</li>
+                </ul>
+                <div class="alert alert-warning">
+                    <small>Note: After changing the prefix, you may need to add the new bin folder to your system PATH.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Store system info globally
+        let systemInfo = {
+            homeDir: '',
+            username: '',
+            platform: ''
+        };
+        
+        // Fetch system info from server (works on Windows and Linux)
+        async function fetchSystemInfo() {
+            try {
+                const response = await fetch('/api/system-info');
+                systemInfo = await response.json();
+                updatePaths();
+            } catch (error) {
+                console.error('Failed to get system info:', error);
+                // Fallback: try to detect from browser
+                detectFromBrowser();
+            }
+        }
+        
+        // Fallback detection from browser
+        function detectFromBrowser() {
+            const userAgent = navigator.userAgent;
+            if (userAgent.indexOf('Win') !== -1) {
+                systemInfo.platform = 'win32';
+                systemInfo.homeDir = 'C:\\Users\\' + (navigator.platform.includes('Win') ? 'default' : '');
+            } else {
+                systemInfo.platform = 'linux';
+                systemInfo.homeDir = '/home/default';
+            }
+            updatePaths();
+        }
+        
+        // Update UI with detected paths
+        function updatePaths() {
+            const homeDir = systemInfo.homeDir || 'C:\\Users\\default';
+            const appdataPath = systemInfo.platform === 'win32' 
+                ? homeDir + '\\AppData\\Roaming\\npm' 
+                : homeDir + '/.npm-global';
+            
+            document.getElementById('homePath').textContent = homeDir;
+            document.getElementById('appdataPath').textContent = appdataPath;
+            document.getElementById('currentPrefix').textContent = homeDir;
+        }
+        
+        // Theme management
+        function toggleTheme() {
+            const body = document.body;
+            const themeBtn = document.getElementById('themeBtn');
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeBtn.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeBtn.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+        
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeBtn').textContent = '☀️';
+            }
+        }
+        
+        // Initialize theme
+        loadTheme();
+        
+        // Current prefix
+        let currentPrefix = '';
+        
+        function showMessage(text, type) {
+            const msgEl = document.getElementById('message');
+            msgEl.textContent = text;
+            msgEl.className = 'alert alert-' + type;
+            msgEl.style.display = 'block';
+            setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
+        }
+        
+        function setPrefix(type) {
+            let newPrefix = '';
+            const homeDir = document.getElementById('homePath').textContent;
+            
+            switch(type) {
+                case 'home':
+                    newPrefix = homeDir;
+                    break;
+                case 'appdata':
+                    newPrefix = document.getElementById('appdataPath').textContent;
+                    break;
+                case 'custom':
+                    document.getElementById('customPathInput').style.display = 'flex';
+                    return;
+            }
+            
+            if (newPrefix && newPrefix !== 'Detecting...') {
+                showMessage('Run this command: npm config set prefix "' + newPrefix + '" --global', 'success');
+                document.getElementById('currentPrefix').textContent = newPrefix;
+            }
+        }
+        
+        function applyCustomPath() {
+            const customPath = document.getElementById('customPath').value;
+            if (customPath) {
+                showMessage('Run this command: npm config set prefix "' + customPath + '" --global', 'success');
+                document.getElementById('currentPrefix').textContent = customPath;
+            }
+        }
+        
+        function refreshStatus() {
+            fetchSystemInfo();
+            showMessage('Configuration refreshed', 'info');
+        }
+        
+        // Initialize - fetch system info from server
+        fetchSystemInfo();
+    </script>
+</body>
+</html>

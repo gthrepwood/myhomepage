@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "GitHub",
+    "url": "https://github.com",
+    "color": "#333"
+  },
+  {
+    "id": 2,
+    "name": "Stack Overflow",
+    "url": "https://stackoverflow.com",
+    "color": "#f48024"
+  },
+  {
+    "id": 3,
+    "name": "YouTube",
+    "url": "https://youtube.com",
+    "color": "#ff0000"
+  },
+  {
+    "id": 4,
+    "name": "Gmail",
+    "url": "https://gmail.com",
+    "color": "#ea4335"
+  },
+  {
+    "id": 1773669397304,
+    "name": "Test Button",
+    "url": "https://test-example.com",
+    "color": "#ff0000"
+  },
+  {
+    "id": 1773669397407,
+    "name": "Example.com",
+    "url": "https://example.com",
+    "color": "#007bff"
+  },
+  {
+    "id": 1773669397547,
+    "name": "Google.com",
+    "url": "https://www.google.com",
+    "color": "#007bff"
+  }
+]

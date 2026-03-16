@@ -1,0 +1,99 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Start Server",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["start"],
+            "console": "integratedTerminal",
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
+            "name": "Start Server (Debug)",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["start"],
+            "console": "integratedTerminal",
+            "skipFiles": ["<node_internals>/**"],
+            "env": {
+                "NODE_ENV": "development"
+            }
+        },
+        {
+            "name": "Docker: Build & Up",
+            "type": "shell",
+            "request": "launch",
+            "command": "docker-compose up --build",
+            "console": "integratedTerminal",
+            "presentation": {
+                "group": "docker",
+                "order": 1
+            }
+        },
+        {
+            "name": "Docker: Up",
+            "type": "shell",
+            "request": "launch",
+            "command": "docker-compose up",
+            "console": "integratedTerminal",
+            "presentation": {
+                "group": "docker",
+                "order": 2
+            }
+        },
+        {
+            "name": "Docker: Down",
+            "type": "shell",
+            "request": "launch",
+            "command": "docker-compose down",
+            "console": "integratedTerminal",
+            "presentation": {
+                "group": "docker",
+                "order": 3
+            }
+        },
+        {
+            "name": "npm: Setup Global Prefix (Home)",
+            "type": "shell",
+            "request": "launch",
+            "command": "npm config set prefix \"${env:HOME}\" --global",
+            "console": "integratedTerminal",
+            "presentation": {
+                "group": "npm",
+                "order": 1
+            }
+        },
+        {
+            "name": "npm: Install to Project",
+            "type": "shell",
+            "request": "launch",
+            "command": "npm install",
+            "console": "integratedTerminal",
+            "presentation": {
+                "group": "npm",
+                "order": 2
+            }
+        },
+        {
+            "name": "npm: Run Tests",
+            "type": "shell",
+            "request": "launch",
+            "command": "npm test",
+            "console": "integratedTerminal",
+            "presentation": {
+                "group": "npm",
+                "order": 3
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Docker: Full Cycle",
+            "configurations": ["Docker: Down", "Docker: Build & Up"],
+            "stopAll": true
+        }
+    ]
+}

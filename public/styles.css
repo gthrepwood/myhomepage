@@ -1,0 +1,458 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Light mode - clean white background */
+    background: #ffffff;
+    background-image: 
+        linear-gradient(180deg, #f0f0f0 0%, #ffffff 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+/* Dark mode - Star Trek LCARS theme */
+body.dark-mode {
+    background: #000033;
+    background-image: 
+        radial-gradient(ellipse at 20% 80%, #1a0033 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, #000066 0%, transparent 40%);
+    color: #ffcc00;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+    color: #333;
+}
+
+.add-btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+}
+
+.buttons-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 24px;
+}
+
+/* App buttons - Light mode default */
+.app-button {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: #333;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.app-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.app-button:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.app-button .icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    object-fit: contain;
+    background: white;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.app-button .icon-text {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: white;
+    text-transform: uppercase;
+}
+
+.app-button .name {
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Drag and drop styles */
+.app-button.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+.app-button.drag-over {
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+}
+
+/* Action buttons (edit/delete) */
+.app-button .actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.app-button:hover .actions {
+    opacity: 1;
+}
+
+.action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+}
+
+.edit-btn {
+    background: #ffc107;
+    color: #000;
+}
+
+.delete-btn {
+    background: #dc3545;
+    color: white;
+}
+
+/* Modal styles - Light mode default */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 32px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+    margin-bottom: 24px;
+    font-weight: 400;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+    color: #333;
+    font-size: 1rem;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.form-group input[type="color"] {
+    height: 50px;
+    padding: 4px;
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.cancel-btn, .save-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.2s;
+}
+
+.cancel-btn {
+    background: #6c757d;
+    color: white;
+}
+
+.save-btn {
+    background: #007bff;
+    color: white;
+}
+
+.cancel-btn:hover, .save-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    .buttons-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 16px;
+    }
+    
+    .app-button {
+        padding: 30px 16px;
+    }
+    
+    .app-button .icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .app-button .icon-text {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+/* Dark mode - Star Trek LCARS theme */
+body.dark-mode h1 {
+    color: #ff9900;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: 0 0 10px rgba(255, 153, 0, 0.5);
+    border-left: 8px solid #ff9900;
+    padding-left: 20px;
+}
+
+body.dark-mode .add-btn {
+    background: #ff9900;
+    color: #000033;
+    border-radius: 0 25px 25px 0;
+    box-shadow: 3px 3px 0 #cc6600;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+body.dark-mode .add-btn:hover {
+    background: #ffaa33;
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 #cc6600;
+}
+
+body.dark-mode .app-button {
+    background: linear-gradient(180deg, #ffcc00 0%, #ff9900 50%, #cc6600 100%);
+    color: #000033;
+    border-radius: 0 20px 20px 0;
+    border-left: 12px solid #ff9900;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+}
+
+body.dark-mode .app-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: #ff6600;
+}
+
+body.dark-mode .app-button:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 7px 7px 0 rgba(0,0,0,0.4);
+}
+
+body.dark-mode .app-button .icon {
+    background: #000033;
+    border: 3px solid #ff9900;
+    box-shadow: 0 0 10px rgba(255, 153, 0, 0.5);
+}
+
+body.dark-mode .app-button .icon-text {
+    background: #000033;
+    color: #ffcc00;
+    border: 3px solid #ff9900;
+    box-shadow: 0 0 10px rgba(255, 153, 0, 0.5);
+}
+
+body.dark-mode .app-button .name {
+    color: #000033;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+body.dark-mode .modal-content {
+    background: linear-gradient(180deg, #1a1a4d 0%, #000033 100%);
+    border-radius: 0 30px 30px 0;
+    border-left: 10px solid #ff9900;
+    box-shadow: 0 0 30px rgba(255, 153, 0, 0.3);
+}
+
+body.dark-mode .modal-content h2 {
+    color: #ff9900;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+body.dark-mode .form-group label {
+    color: #ffcc00;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+body.dark-mode .form-group input {
+    background: #000033;
+    border: 2px solid #ff9900;
+    border-radius: 0 15px 15px 0;
+    color: #ffcc00;
+    font-family: 'Courier New', monospace;
+}
+
+body.dark-mode .form-group input::placeholder {
+    color: #666;
+}
+
+body.dark-mode .form-group input:focus {
+    border-color: #ffcc00;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+}
+
+body.dark-mode .cancel-btn {
+    background: #666666;
+    color: #fff;
+    border-radius: 0 20px 20px 0;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+body.dark-mode .cancel-btn:hover {
+    background: #888888;
+    transform: translate(-2px, -2px);
+}
+
+body.dark-mode .save-btn {
+    background: #ff9900;
+    color: #000033;
+    border-radius: 0 20px 20px 0;
+    box-shadow: 3px 3px 0 #cc6600;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+body.dark-mode .save-btn:hover {
+    background: #ffaa33;
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 #cc6600;
+}
+
+body.dark-mode .edit-btn {
+    background: #0099cc;
+    color: #fff;
+}
+
+body.dark-mode .delete-btn {
+    background: #cc3300;
+    color: #fff;
+}
