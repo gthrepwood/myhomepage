@@ -57,15 +57,21 @@ function renderButtons() {
         
         // Icon - try to use website favicon, fallback to first letter
         const initial = button.name.charAt(0).toUpperCase();
-        const faviconUrl = 'https://www.google.com/s2/favicons?domain=' + new URL(button.url).hostname + '&sz=64';
+        let faviconUrl = '';
+        try {
+            const url = new URL(button.url);
+            faviconUrl = 'https://www.google.com/s2/favicons?domain=' + url.hostname + '&sz=32';
+        } catch (e) {
+            faviconUrl = '';
+        }
         
         btn.innerHTML = `
             <div class="actions">
                 <button class="action-btn edit-btn" data-id="${button.id}" title="Edit">✎</button>
                 <button class="action-btn delete-btn" data-id="${button.id}" title="Delete">✕</button>
             </div>
-            <img src="${faviconUrl}" alt="${button.name}" class="icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <span class="icon-text" style="display:none;">${initial}</span>
+            ${faviconUrl ? `<img src="${faviconUrl}" alt="${button.name}" class="icon" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
+            <span class="icon-text" style="display:${faviconUrl ? 'none' : 'flex'};">${initial}</span>
             <span class="name">${button.name}</span>
         `;
         
