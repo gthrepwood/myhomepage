@@ -110,6 +110,14 @@ function renderButtons() {
     handle.className = 'resize-handle';
     handle.title = 'Drag to resize buttons';
     buttonsContainer.appendChild(handle);
+
+    // Reapply saved height
+    const savedHeight = localStorage.getItem('buttonHeight');
+    if (savedHeight) {
+        document.querySelectorAll('.app-button').forEach(btn => {
+            btn.style.minHeight = `${savedHeight}px`;
+        });
+    }
 }
 
 // Drag and Drop Handlers
@@ -304,20 +312,28 @@ function initResize() {
     const handle = document.querySelector('.resize-handle');
     if (!handle) return;
 
-    const MIN_SIZE = 80;
-    const MAX_SIZE = 400;
-    const savedSize = localStorage.getItem('buttonSize');
+    const MIN_WIDTH = 80;
+    const MAX_WIDTH = 400;
+    const MIN_HEIGHT = 80;
+    const MAX_HEIGHT = 400;
+    const savedWidth = localStorage.getItem('buttonWidth');
+    const savedHeight = localStorage.getItem('buttonHeight');
 
-    if (savedSize) {
-        applyButtonSize(parseInt(savedSize));
+    if (savedWidth) {
+        applyButtonWidth(parseInt(savedWidth));
+    }
+    if (savedHeight) {
+        applyButtonHeight(parseInt(savedHeight));
     }
 
-    let startX, startWidth;
+    let startX, startY, startWidth, startHeight;
 
     handle.addEventListener('mousedown', (e) => {
         e.preventDefault();
         startX = e.clientX;
-        startWidth = getCurrentSize();
+        startY = e.clientY;
+        startWidth = getCurrentWidth();
+        startHeight = getCurrentHeight();
 
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
@@ -326,7 +342,9 @@ function initResize() {
     handle.addEventListener('touchstart', (e) => {
         e.preventDefault();
         startX = e.touches[0].clientX;
-        startWidth = getCurrentSize();
+        startY = e.touches[0].clientY;
+        startWidth = getCurrentWidth();
+        startHeight = getCurrentHeight();
 
         document.addEventListener('touchmove', onTouchMove);
         document.addEventListener('touchend', onTouchEnd);
@@ -334,35 +352,54 @@ function initResize() {
 
     function onMouseMove(e) {
         const dx = e.clientX - startX;
-        const newSize = Math.min(MAX_SIZE, Math.max(MIN_SIZE, startWidth + dx));
-        applyButtonSize(newSize);
+        const dy = e.clientY - startY;
+        const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + dx));
+        const newHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, startHeight + dy));
+        applyButtonWidth(newWidth);
+        applyButtonHeight(newHeight);
     }
 
     function onMouseUp() {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
-        localStorage.setItem('buttonSize', getCurrentSize());
+        localStorage.setItem('buttonWidth', getCurrentWidth());
+        localStorage.setItem('buttonHeight', getCurrentHeight());
     }
 
     function onTouchMove(e) {
         const dx = e.touches[0].clientX - startX;
-        const newSize = Math.min(MAX_SIZE, Math.max(MIN_SIZE, startWidth + dx));
-        applyButtonSize(newSize);
+        const dy = e.touches[0].clientY - startY;
+        const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + dx));
+        const newHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, startHeight + dy));
+        applyButtonWidth(newWidth);
+        applyButtonHeight(newHeight);
     }
 
     function onTouchEnd() {
         document.removeEventListener('touchmove', onTouchMove);
         document.removeEventListener('touchend', onTouchEnd);
-        localStorage.setItem('buttonSize', getCurrentSize());
+        localStorage.setItem('buttonWidth', getCurrentWidth());
+        localStorage.setItem('buttonHeight', getCurrentHeight());
     }
 
-    function getCurrentSize() {
+    function getCurrentWidth() {
         const style = buttonsContainer.style.gridTemplateColumns;
         const match = style.match(/minmax\((\d+)px/);
         return match ? parseInt(match[1]) : 120;
     }
 
-    function applyButtonSize(size) {
+    function getCurrentHeight() {
+        const btn = document.querySelector('.app-button');
+        return btn ? btn.offsetHeight : 120;
+    }
+
+    function applyButtonWidth(size) {
         buttonsContainer.style.gridTemplateColumns = `repeat(auto-fill, minmax(${size}px, 1fr))`;
+    }
+
+    function applyButtonHeight(size) {
+        document.querySelectorAll('.app-button').forEach(btn => {
+            btn.style.minHeight = `${size}px`;
+        });
     }
 }
