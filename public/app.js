@@ -34,6 +34,7 @@ async function loadButtons() {
         const data = await response.json();
         buttons = Array.isArray(data) ? data : [];
         renderButtons();
+        initResize();
     } catch (error) {
         console.error('Failed to load buttons:', error);
         // Show error message to user
@@ -103,6 +104,12 @@ function renderButtons() {
         
         buttonsContainer.appendChild(btn);
     });
+
+    // Re-add resize handle
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    handle.title = 'Drag to resize buttons';
+    buttonsContainer.appendChild(handle);
 }
 
 // Drag and Drop Handlers
@@ -290,4 +297,72 @@ function restoreButtons(input) {
     };
     reader.readAsText(file);
     input.value = '';
+}
+
+// Button resize via drag handle
+function initResize() {
+    const handle = document.querySelector('.resize-handle');
+    if (!handle) return;
+
+    const MIN_SIZE = 80;
+    const MAX_SIZE = 400;
+    const savedSize = localStorage.getItem('buttonSize');
+
+    if (savedSize) {
+        applyButtonSize(parseInt(savedSize));
+    }
+
+    let startX, startWidth;
+
+    handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        startX = e.clientX;
+        startWidth = getCurrentSize();
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+
+    handle.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        startX = e.touches[0].clientX;
+        startWidth = getCurrentSize();
+
+        document.addEventListener('touchmove', onTouchMove);
+        document.addEventListener('touchend', onTouchEnd);
+    });
+
+    function onMouseMove(e) {
+        const dx = e.clientX - startX;
+        const newSize = Math.min(MAX_SIZE, Math.max(MIN_SIZE, startWidth + dx));
+        applyButtonSize(newSize);
+    }
+
+    function onMouseUp() {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        localStorage.setItem('buttonSize', getCurrentSize());
+    }
+
+    function onTouchMove(e) {
+        const dx = e.touches[0].clientX - startX;
+        const newSize = Math.min(MAX_SIZE, Math.max(MIN_SIZE, startWidth + dx));
+        applyButtonSize(newSize);
+    }
+
+    function onTouchEnd() {
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onTouchEnd);
+        localStorage.setItem('buttonSize', getCurrentSize());
+    }
+
+    function getCurrentSize() {
+        const style = buttonsContainer.style.gridTemplateColumns;
+        const match = style.match(/minmax\((\d+)px/);
+        return match ? parseInt(match[1]) : 120;
+    }
+
+    function applyButtonSize(size) {
+        buttonsContainer.style.gridTemplateColumns = `repeat(auto-fill, minmax(${size}px, 1fr))`;
+    }
 }
