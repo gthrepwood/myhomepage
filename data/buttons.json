@@ -28,5 +28,17 @@
     "name": "https://jellyfin.lugu.mywire.org/",
     "url": "https://jellyfin.lugu.mywire.org/",
     "clickCount": 0
+  },
+  {
+    "id": 1789247768645,
+    "name": "gemini",
+    "url": "https://gemini.google.com/",
+    "clickCount": 0
+  },
+  {
+    "id": 1789247781587,
+    "name": "fj",
+    "url": "https://git.lugu.mywire.org/",
+    "clickCount": 0
   }
 ]
