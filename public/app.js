@@ -1,7 +1,6 @@
 // State
 let buttons = [];
 let editingId = null;
-let draggedItem = null;
 
 // DOM Elements
 const buttonsContainer = document.getElementById('buttonsContainer');
@@ -10,6 +9,7 @@ const modal = document.getElementById('modal');
 const modalTitle = document.getElementById('modalTitle');
 const buttonForm = document.getElementById('buttonForm');
 const cancelBtn = document.getElementById('cancelBtn');
+const deleteBtn = document.getElementById('deleteBtn');
 const nameInput = document.getElementById('name');
 const urlInput = document.getElementById('url');
 
@@ -19,10 +19,20 @@ document.addEventListener('DOMContentLoaded', loadButtons);
 // Event Listeners
 addButton.addEventListener('click', () => openModal());
 cancelBtn.addEventListener('click', () => closeModal());
+deleteBtn.addEventListener('click', () => {
+    if (editingId && confirm('Are you sure you want to delete this button?')) {
+        deleteButton(editingId);
+    }
+});
 modal.addEventListener('click', (e) => {
     if (e.target === modal) closeModal();
 });
 buttonForm.addEventListener('submit', handleSubmit);
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
+    }
+});
 
 // Load buttons from API
 async function loadButtons() {
@@ -47,61 +57,75 @@ async function loadButtons() {
 // Render buttons
 function renderButtons() {
     buttonsContainer.innerHTML = '';
-    
-    buttons.forEach((button, index) => {
+
+    const sorted = [...buttons].sort((a, b) => (b.clickCount || 0) - (a.clickCount || 0));
+
+    sorted.forEach((button, index) => {
         const btn = document.createElement('a');
         btn.className = 'app-button';
         btn.href = button.url;
-        btn.draggable = true;
+        btn.draggable = false;
         btn.dataset.id = button.id;
         btn.dataset.index = index;
-        
-        // Icon - try to use website favicon, fallback to first letter
+
+        // Icon - try multiple favicon services, fallback to site's favicon.ico, then first letter
         const initial = button.name.charAt(0).toUpperCase();
-        let faviconUrl = '';
+        let faviconUrls = [];
+        let siteFaviconUrl = '';
         try {
             const url = new URL(button.url);
-            faviconUrl = 'https://www.google.com/s2/favicons?domain=' + url.hostname + '&sz=32';
+            // Try multiple favicon services in order
+            faviconUrls = [
+                'https://icons.duckduckgo.com/ip3/' + url.hostname + '.ico',
+                'https://www.google.com/s2/favicons?domain=' + url.hostname + '&sz=32',
+                'https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=' + encodeURIComponent(url.origin) + '&size=32',
+                'https://favicon.yandex.net/favicon/' + url.hostname
+            ];
+            siteFaviconUrl = url.origin + '/favicon.ico';
         } catch (e) {
-            faviconUrl = '';
+            faviconUrls = [];
+            siteFaviconUrl = '';
         }
+
+        const clickCount = button.clickCount || 0;
+
+        // Build fallback chain: try each favicon service, then site's favicon.ico, then letter
+        let fallbackChain = [...faviconUrls];
+        if (siteFaviconUrl) fallbackChain.push(siteFaviconUrl);
         
+        let imgHtml = '';
+        if (fallbackChain.length > 0) {
+            let onerrorChain = '';
+            for (let i = 0; i < fallbackChain.length; i++) {
+                if (i === fallbackChain.length - 1) {
+                    // Last fallback - hide and show letter
+                    onerrorChain += "this.style.display='none'; this.nextElementSibling.style.display='flex';";
+                } else {
+                    // Try next in chain
+                    onerrorChain += "this.onerror=null; this.src='" + fallbackChain[i + 1].replace(/'/g, "\\'") + "';";
+                }
+            }
+            imgHtml = `<img src="${fallbackChain[0]}" alt="${button.name}" class="icon" loading="lazy" onerror="${onerrorChain}">`;
+        }
+
         btn.innerHTML = `
-            <div class="actions">
-                <button class="action-btn edit-btn" data-id="${button.id}" title="Edit">✎</button>
-                <button class="action-btn delete-btn" data-id="${button.id}" title="Delete">✕</button>
-            </div>
-            ${faviconUrl ? `<img src="${faviconUrl}" alt="${button.name}" class="icon" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
-            <span class="icon-text" style="display:${faviconUrl ? 'none' : 'flex'};">${initial}</span>
+            ${imgHtml}
+            <span class="icon-text" style="display:${fallbackChain.length > 0 ? 'none' : 'flex'};">${initial}</span>
             <span class="name">${button.name}</span>
+            ${clickCount > 0 ? `<span class="click-badge">${clickCount}</span>` : ''}
         `;
         
-        // Prevent link navigation for action buttons
-        btn.querySelector('.actions').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+        // Track click count on navigation
+        btn.addEventListener('click', () => {
+            navigator.sendBeacon(`/api/buttons/${button.id}/click`);
         });
-        
-        // Edit button
-        btn.querySelector('.edit-btn').addEventListener('click', (e) => {
+
+        // Right-click to edit
+        btn.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            e.stopPropagation();
             editButton(button);
         });
-        
-        // Delete button
-        btn.querySelector('.delete-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            deleteButton(button.id);
-        });
-        
-        // Drag and drop events
-        btn.addEventListener('dragstart', handleDragStart);
-        btn.addEventListener('dragend', handleDragEnd);
-        btn.addEventListener('dragover', handleDragOver);
-        btn.addEventListener('drop', handleDrop);
-        
+
         buttonsContainer.appendChild(btn);
     });
 
@@ -117,49 +141,6 @@ function renderButtons() {
         document.querySelectorAll('.app-button').forEach(btn => {
             btn.style.minHeight = `${savedHeight}px`;
         });
-    }
-}
-
-// Drag and Drop Handlers
-function handleDragStart(e) {
-    draggedItem = this;
-    this.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-}
-
-function handleDragEnd(e) {
-    this.classList.remove('dragging');
-    document.querySelectorAll('.app-button').forEach(btn => {
-        btn.classList.remove('drag-over');
-    });
-}
-
-function handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    
-    if (this !== draggedItem) {
-        this.classList.add('drag-over');
-    }
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    this.classList.remove('drag-over');
-    
-    if (this !== draggedItem) {
-        const fromIndex = parseInt(draggedItem.dataset.index);
-        const toIndex = parseInt(this.dataset.index);
-        
-        // Reorder array
-        const [movedItem] = buttons.splice(fromIndex, 1);
-        buttons.splice(toIndex, 0, movedItem);
-        
-        // Save new order to API
-        saveButtonOrder();
-        
-        // Re-render
-        renderButtons();
     }
 }
 
@@ -183,6 +164,7 @@ function openModal(button = null) {
     
     if (nameInput) nameInput.value = button ? button.name : '';
     if (urlInput) urlInput.value = button ? button.url : '';
+    if (deleteBtn) deleteBtn.style.display = button ? 'inline-block' : 'none';
     
     modal.classList.add('active');
 }

@@ -2,21 +2,31 @@
   {
     "id": 1773678707133,
     "name": "Test Button",
-    "url": "https://test-example.com"
+    "url": "https://test-example.com",
+    "clickCount": 1
   },
   {
     "id": 1773678707232,
     "name": "Example.com",
-    "url": "https://example.com"
+    "url": "https://example.com",
+    "clickCount": 1
   },
   {
     "id": 1773678707304,
     "name": "Google.com",
-    "url": "https://www.google.com"
+    "url": "https://www.google.com",
+    "clickCount": 1
   },
   {
     "id": 1774804637944,
     "name": "Index.hu",
-    "url": "https://index.hu/"
+    "url": "https://index.hu/",
+    "clickCount": 2
+  },
+  {
+    "id": 1789247496613,
+    "name": "https://jellyfin.lugu.mywire.org/",
+    "url": "https://jellyfin.lugu.mywire.org/",
+    "clickCount": 0
   }
 ]

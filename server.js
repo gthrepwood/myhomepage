@@ -27,6 +27,12 @@ app.get('/api/system-info', (req, res) => {
     });
 });
 
+// API: Get app version
+const packageJson = require('./package.json');
+app.get('/api/version', (req, res) => {
+    res.json({ version: packageJson.version });
+});
+
 // Ensure data directory exists
 const dataDir = path.dirname(DATA_FILE);
 if (!fs.existsSync(dataDir)) {
@@ -101,7 +107,8 @@ app.post('/api/buttons', (req, res) => {
         const newButton = {
             id: Date.now(),
             name: buttonName,
-            url
+            url,
+            clickCount: 0
         };
         
         buttons.push(newButton);
@@ -110,6 +117,25 @@ app.post('/api/buttons', (req, res) => {
         res.status(201).json(newButton);
     } catch (error) {
         res.status(500).json({ error: 'Failed to add button' });
+    }
+});
+
+// POST - Increment button click count
+app.post('/api/buttons/:id/click', (req, res) => {
+    try {
+        const { id } = req.params;
+        const buttons = getButtons();
+        const index = buttons.findIndex(b => b.id == id);
+
+        if (index === -1) {
+            return res.status(404).json({ error: 'Button not found' });
+        }
+
+        buttons[index].clickCount = (buttons[index].clickCount || 0) + 1;
+        saveButtons(buttons);
+        res.json(buttons[index]);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to record click' });
     }
 });
 

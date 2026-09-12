@@ -26,15 +26,163 @@ body.dark-mode {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 40px 20px;
+    padding: 5px 10px;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.theme-toggle .btn {
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border: 3px solid #007bff;
+    background: white;
+    color: #007bff;
+    cursor: pointer;
+}
+
+/* Hamburger menu */
+.hamburger-menu {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 9999;
+}
+
+.hamburger-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    border: 2px solid #007bff;
+    background: white;
+    color: #007bff;
+    cursor: pointer;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hamburger-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.hamburger-dropdown {
+    display: none;
+    position: absolute;
+    top: 52px;
+    left: 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    min-width: 220px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+}
+
+.hamburger-dropdown.open {
+    display: block;
+}
+
+.hamburger-dropdown .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #333;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.hamburger-dropdown .menu-item:hover {
+    background: #f0f0f0;
+}
+
+.hamburger-dropdown .menu-divider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 4px 0;
+}
+
+.hamburger-dropdown .about-section {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.hamburger-dropdown .about-section a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.hamburger-dropdown .about-section a:hover {
+    text-decoration: underline;
+}
+
+/* Dark mode styles */
+body.dark-mode .theme-toggle .btn {
+    border-color: #ff9900;
+    background: #000033;
+    color: #ffcc00;
+    box-shadow: 3px 3px 0 #cc6600;
+}
+
+body.dark-mode .hamburger-btn {
+    border-color: #ff9900;
+    background: #000033;
+    color: #ffcc00;
+}
+
+body.dark-mode .hamburger-dropdown {
+    background: #000033;
+    border-color: #ff9900;
+}
+
+body.dark-mode .hamburger-dropdown .menu-item {
+    color: #ffcc00;
+}
+
+body.dark-mode .hamburger-dropdown .menu-item:hover {
+    background: #1a1a4d;
+}
+
+body.dark-mode .hamburger-dropdown .menu-divider {
+    background: #333366;
+}
+
+body.dark-mode .hamburger-dropdown .about-section {
+    color: #cc9900;
+}
+
+body.dark-mode .hamburger-dropdown .about-section a {
+    color: #66ccff;
 }
 
 header {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
     margin-bottom: 40px;
-    flex-wrap: wrap;
     gap: 20px;
 }
 
@@ -43,9 +191,13 @@ h1 {
     font-weight: 300;
     letter-spacing: 2px;
     color: #333;
+    text-align: center;
+    grid-column: 2;
 }
 
 .add-btn {
+    grid-column: 3;
+    justify-self: end;
     padding: 12px 24px;
     font-size: 1rem;
     background: #007bff;
@@ -135,9 +287,7 @@ body.dark-mode .resize-handle {
 }
 
 .app-button .icon {
-    /* width: 80px; */
-    /* height: 80px; */
-    border-radius: 12px;
+    border-radius: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -154,8 +304,6 @@ body.dark-mode .resize-handle {
 }
 
 .app-button .icon-text {
-    /* width: 80px; */
-    /* height: 80px; */
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -173,6 +321,27 @@ body.dark-mode .resize-handle {
     text-align: center;
 }
 
+/* Click count badge */
+.app-button .click-badge {
+    position: absolute;
+    bottom: auto;
+    top: 6px;
+    right: 8px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #999;
+    background: rgba(0,0,0,0.06);
+    border-radius: 8px;
+    padding: 1px 5px;
+    line-height: 1.3;
+    pointer-events: none;
+}
+
+body.dark-mode .app-button .click-badge {
+    color: #000033;
+    background: rgba(0,0,0,0.15);
+}
+
 /* Drag and drop styles */
 .app-button.dragging {
     opacity: 0.5;
@@ -181,48 +350,6 @@ body.dark-mode .resize-handle {
 
 .app-button.drag-over {
     border: 2px dashed rgba(255, 255, 255, 0.5);
-}
-
-/* Action buttons (edit/delete) */
-.app-button .actions {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    gap: 8px;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.app-button:hover .actions {
-    opacity: 1;
-}
-
-.action-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    transition: transform 0.2s;
-}
-
-.action-btn:hover {
-    transform: scale(1.1);
-}
-
-.edit-btn {
-    background: #ffc107;
-    color: #000;
-}
-
-.delete-btn {
-    background: #dc3545;
-    color: white;
 }
 
 /* Modal styles - Light mode default */
@@ -297,7 +424,7 @@ body.dark-mode .resize-handle {
     margin-top: 24px;
 }
 
-.cancel-btn, .save-btn {
+.cancel-btn, .save-btn, .delete-btn {
     padding: 12px 24px;
     border-radius: 8px;
     border: none;
@@ -316,7 +443,13 @@ body.dark-mode .resize-handle {
     color: white;
 }
 
-.cancel-btn:hover, .save-btn:hover {
+.delete-btn {
+    background: #dc3545;
+    color: white;
+    float: left;
+}
+
+.cancel-btn:hover, .save-btn:hover, .delete-btn:hover {
     transform: translateY(-2px);
 }
 
@@ -352,8 +485,6 @@ body.dark-mode h1 {
     text-transform: uppercase;
     letter-spacing: 4px;
     text-shadow: 0 0 10px rgba(255, 153, 0, 0.5);
-    border-left: 8px solid #ff9900;
-    padding-left: 20px;
 }
 
 body.dark-mode .add-btn {
@@ -482,12 +613,12 @@ body.dark-mode .save-btn:hover {
     box-shadow: 5px 5px 0 #cc6600;
 }
 
-body.dark-mode .edit-btn {
-    background: #0099cc;
-    color: #fff;
+body.dark-mode .delete-btn {
+    background: #cc0000;
+    color: white;
+    border: 2px solid #ff0000;
 }
 
-body.dark-mode .delete-btn {
-    background: #cc3300;
-    color: #fff;
+body.dark-mode .delete-btn:hover {
+    background: #ff0000;
 }
