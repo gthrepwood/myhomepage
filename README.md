@@ -38,15 +38,21 @@ npm test
 ### Docker
 
 ```bash
-# Build and run with Docker Compose
-docker-compose up -d
-
-# Or use the scripts
-./build-docker.sh
+# Run with Docker (plain docker)
 ./run-docker.sh
+
+# Or build and run via helper script
+./build-docker.sh
+./docker.sh start
 ```
 
 Open http://localhost:3000
+
+> **Note**: Create the data directory on the host first:
+> ```bash
+> sudo mkdir -p /mnt/user/appdata/myhomepage/data
+> sudo chown -R $USER:$USER /mnt/user/appdata/myhomepage/data
+> ```
 
 ## NPM Scripts
 
@@ -115,31 +121,4 @@ Press `F5` to run with debugger, or use the built-in run configurations:
 - Start Server (Debug)
 - Docker: Up / Down / Build
 
-## Project Structure
 
-```
-.
-├── server.js           # Express backend
-├── public/
-│   ├── index.html     # Main frontend HTML
-│   ├── styles.css     # Styling (light/dark themes)
-│   └── app.js        # Frontend JavaScript
-├── docs/
-│   └── settings.html # npm global settings page
-├── test/
-│   ├── test-api.js   # API tests
-│   └── test-settings.js  # UI tests
-├── data/
-│   └── buttons.json  # Data storage
-├── Dockerfile        # Docker image
-├── docker-compose.yml
-└── .vscode/
-    └── launch.json   # Run configurations
-```
-
-## Settings Page
-
-Visit http://localhost:3000/docs/settings.html to configure your npm global prefix. This page displays:
-- Your home directory
-- Username
-- Options to set npm global package location

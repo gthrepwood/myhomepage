@@ -1,6 +1,14 @@
 // State
 let buttons = [];
 let editingId = null;
+let isOffline = false;
+let filterText = '';
+let openTimer = null;
+
+// Constants
+const CACHE_KEY = 'myhomepage_buttons_cache';
+const AUTO_OPEN_DELAY = 0;
+//const AUTO_OPEN_DELAY = 2000;
 
 // DOM Elements
 const buttonsContainer = document.getElementById('buttonsContainer');
@@ -11,6 +19,7 @@ const buttonForm = document.getElementById('buttonForm');
 const cancelBtn = document.getElementById('cancelBtn');
 const deleteBtn = document.getElementById('deleteBtn');
 const nameInput = document.getElementById('name');
+const faviconInput = document.getElementById('favicon');
 const urlInput = document.getElementById('url');
 
 // Initialize
@@ -31,8 +40,66 @@ buttonForm.addEventListener('submit', handleSubmit);
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modal.classList.contains('active')) {
         closeModal();
+        return;
+    }
+    // Ignore typing when modal or form inputs are focused
+    const active = document.activeElement;
+    if (modal.classList.contains('active')) return;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+    // Clear filter on Escape
+    if (e.key === 'Escape') {
+        filterText = '';
+        clearTimeout(openTimer);
+        openTimer = null;
+        renderButtons();
+        return;
+    }
+    // Backspace removes last char
+    if (e.key === 'Backspace') {
+        filterText = filterText.slice(0, -1);
+        clearTimeout(openTimer);
+        openTimer = null;
+        renderButtons();
+        return;
+    }
+    // Only single alphanumeric characters
+    if (e.key.length === 1 && /[a-z0-9]/i.test(e.key)) {
+        filterText += e.key.toLowerCase();
+        clearTimeout(openTimer);
+        openTimer = null;
+        renderButtons();
     }
 });
+
+// Save buttons to localStorage cache
+function saveButtonsToCache() {
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(buttons));
+    } catch (e) {
+        // Ignore cache write failures (e.g. storage full)
+    }
+}
+
+// Load buttons from localStorage cache
+function loadButtonsFromCache() {
+    try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (!cached) return [];
+        const data = JSON.parse(cached);
+        return Array.isArray(data) ? data : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+// Show an offline/cached banner inside the buttons container
+function showCachedBanner() {
+    if (!buttonsContainer) return;
+    const banner = document.createElement('div');
+    banner.className = 'alert alert-warning cached-banner';
+    banner.textContent = 'Offline: showing last cached buttons. Changes are disabled.';
+    buttonsContainer.prepend(banner);
+}
 
 // Load buttons from API
 async function loadButtons() {
@@ -43,24 +110,51 @@ async function loadButtons() {
         }
         const data = await response.json();
         buttons = Array.isArray(data) ? data : [];
-        renderButtons();
+        isOffline = false;
+        saveButtonsToCache();
+        await renderButtons();
         initResize();
     } catch (error) {
         console.error('Failed to load buttons:', error);
-        // Show error message to user
-        if (buttonsContainer) {
-            buttonsContainer.innerHTML = '<div class="alert alert-warning">Failed to load buttons. Please refresh the page or try again later.</div>';
+        // Fall back to last cached buttons if available
+        const cached = loadButtonsFromCache();
+        if (cached.length > 0) {
+            isOffline = true;
+            buttons = cached;
+            await renderButtons();
+            initResize();
+            showCachedBanner();
+        } else {
+            isOffline = true;
+            // No cache available: show error message
+            if (buttonsContainer) {
+                buttonsContainer.innerHTML = '<div class="alert alert-warning">Failed to load buttons and no cached copy is available. Please refresh the page or try again later.</div>';
+            }
         }
     }
 }
 
 // Render buttons
-function renderButtons() {
+async function renderButtons() {
     buttonsContainer.innerHTML = '';
 
     const sorted = [...buttons].sort((a, b) => (b.clickCount || 0) - (a.clickCount || 0));
+    const filterDisplay = document.getElementById('filterDisplay');
+    if (filterDisplay) {
+        if (filterText) {
+            filterDisplay.style.display = 'block';
+            filterDisplay.textContent = 'Filter: ' + filterText;
+        } else {
+            filterDisplay.style.display = 'none';
+            filterDisplay.textContent = '';
+        }
+    }
 
-    sorted.forEach((button, index) => {
+    const filtered = filterText
+        ? sorted.filter(b => (b.name || '').toLowerCase().includes(filterText) || (b.url || '').toLowerCase().includes(filterText))
+        : sorted;
+
+    filtered.forEach((button, index) => {
         const btn = document.createElement('a');
         btn.className = 'app-button';
         btn.href = button.url;
@@ -68,53 +162,108 @@ function renderButtons() {
         btn.dataset.id = button.id;
         btn.dataset.index = index;
 
-        // Icon - try multiple favicon services, fallback to site's favicon.ico, then first letter
-        const initial = button.name.charAt(0).toUpperCase();
-        let faviconUrls = [];
-        let siteFaviconUrl = '';
-        try {
-            const url = new URL(button.url);
-            // Try multiple favicon services in order
-            faviconUrls = [
-                'https://icons.duckduckgo.com/ip3/' + url.hostname + '.ico',
-                'https://www.google.com/s2/favicons?domain=' + url.hostname + '&sz=32',
-                'https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=' + encodeURIComponent(url.origin) + '&size=32',
-                'https://favicon.yandex.net/favicon/' + url.hostname
-            ];
-            siteFaviconUrl = url.origin + '/favicon.ico';
-        } catch (e) {
-            faviconUrls = [];
-            siteFaviconUrl = '';
+        // Icon - use custom favicon (path/url or emoji/text) if defined, else try site favicons, then letter
+        const rawFav = ((button.favicon || '') + '').trim();
+        let customFaviconUrl = null;
+        let fallbackText = (button.name || '').charAt(0).toUpperCase() || '?';
+        if (rawFav) {
+            if (/^(https?:)?\/\//i.test(rawFav) || rawFav.startsWith('/') || /\.(ico|png|svg|jpe?g|gif|webp)(\?|#|$)/i.test(rawFav)) {
+                try {
+                    customFaviconUrl = new URL(rawFav, button.url).href;
+                } catch (e) {
+                    customFaviconUrl = rawFav;
+                }
+            } else {
+                fallbackText = rawFav;
+            }
         }
+
+        let faviconUrls = [];
+        if (customFaviconUrl) {
+            faviconUrls.push(customFaviconUrl);
+        }
+
+        let url = null;
+        try {
+            url = new URL(button.url);
+            const host = url.hostname;
+            const origin = url.origin;
+            const isHttp = url.protocol === 'http:' || url.protocol === 'https:';
+            if (isHttp) {
+                // Public favicon services (helpful when direct site favicon is blocked/mixed-content, esp. for http targets)
+                faviconUrls.push(
+                    'https://icons.duckduckgo.com/ip3/' + host + '.ico',
+                    'https://www.google.com/s2/favicons?domain=' + host + '&sz=32',
+                    'https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=' + encodeURIComponent(origin) + '&size=32',
+                    'https://favicon.yandex.net/favicon/' + host
+                );
+            }
+            // Direct site favicons (works for http on http pages and for https)
+            if (host) {
+                faviconUrls.push(
+                    origin + '/favicon.ico',
+                    origin + '/favicon.svg',
+                    origin + '/favicon.png'
+                );
+            }
+        } catch (e) {
+            // keep any custom favicon url even if button url is invalid
+        }
+
+        // Remove duplicates while preserving order
+        const seen = new Set();
+        const fallbackChain = faviconUrls.filter((u) => {
+            if (!u || seen.has(u)) return false;
+            seen.add(u);
+            return true;
+        });
 
         const clickCount = button.clickCount || 0;
 
-        // Build fallback chain: try each favicon service, then site's favicon.ico, then letter
-        let fallbackChain = [...faviconUrls];
-        if (siteFaviconUrl) fallbackChain.push(siteFaviconUrl);
-        
-        let imgHtml = '';
+        const iconWrap = document.createElement('span');
+        iconWrap.className = 'icon-wrap';
+
+        const fallback = document.createElement('span');
+        fallback.className = 'icon-text';
+        fallback.textContent = fallbackText;
+        fallback.style.display = fallbackChain.length > 0 ? 'none' : 'flex';
+
         if (fallbackChain.length > 0) {
-            let onerrorChain = '';
-            for (let i = 0; i < fallbackChain.length; i++) {
-                if (i === fallbackChain.length - 1) {
-                    // Last fallback - hide and show letter
-                    onerrorChain += "this.style.display='none'; this.nextElementSibling.style.display='flex';";
+            const img = document.createElement('img');
+            img.alt = button.name || '';
+            img.className = 'icon';
+            img.loading = 'lazy';
+            img.referrerPolicy = 'no-referrer';
+            let i = 0;
+            img.src = fallbackChain[i];
+            img.onerror = () => {
+                i += 1;
+                if (i < fallbackChain.length) {
+                    img.src = fallbackChain[i];
                 } else {
-                    // Try next in chain
-                    onerrorChain += "this.onerror=null; this.src='" + fallbackChain[i + 1].replace(/'/g, "\\'") + "';";
+                    img.style.display = 'none';
+                    fallback.style.display = 'flex';
                 }
-            }
-            imgHtml = `<img src="${fallbackChain[0]}" alt="${button.name}" class="icon" loading="lazy" onerror="${onerrorChain}">`;
+            };
+            iconWrap.appendChild(img);
         }
 
-        btn.innerHTML = `
-            ${imgHtml}
-            <span class="icon-text" style="display:${fallbackChain.length > 0 ? 'none' : 'flex'};">${initial}</span>
-            <span class="name">${button.name}</span>
-            ${clickCount > 0 ? `<span class="click-badge">${clickCount}</span>` : ''}
-        `;
-        
+        iconWrap.appendChild(fallback);
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'name';
+        nameEl.textContent = button.name || '';
+
+        btn.appendChild(iconWrap);
+        btn.appendChild(nameEl);
+
+        if (clickCount > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'click-badge';
+            badge.textContent = String(clickCount);
+            btn.appendChild(badge);
+        }
+
         // Track click count on navigation
         btn.addEventListener('click', () => {
             navigator.sendBeacon(`/api/buttons/${button.id}/click`);
@@ -135,7 +284,15 @@ function renderButtons() {
     handle.title = 'Drag to resize buttons';
     buttonsContainer.appendChild(handle);
 
-    // Reapply saved height
+    // Auto-open when only one button remains
+    clearTimeout(openTimer);
+    openTimer = null;
+    if (filterText && filtered.length === 1) {
+        const only = filtered[0];
+        openTimer = setTimeout(() => {
+            window.location.href = only.url;
+        }, AUTO_OPEN_DELAY);
+    }
     const savedHeight = localStorage.getItem('buttonHeight');
     if (savedHeight) {
         document.querySelectorAll('.app-button').forEach(btn => {
@@ -152,6 +309,7 @@ async function saveButtonOrder() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ buttons })
         });
+        saveButtonsToCache();
     } catch (error) {
         console.error('Failed to save order:', error);
     }
@@ -161,11 +319,12 @@ async function saveButtonOrder() {
 function openModal(button = null) {
     editingId = button ? button.id : null;
     modalTitle.textContent = button ? 'Edit Application' : 'Add Application';
-    
+
     if (nameInput) nameInput.value = button ? button.name : '';
+    if (faviconInput) faviconInput.value = button ? (button.favicon || '') : '';
     if (urlInput) urlInput.value = button ? button.url : '';
     if (deleteBtn) deleteBtn.style.display = button ? 'inline-block' : 'none';
-    
+
     modal.classList.add('active');
 }
 
@@ -178,30 +337,37 @@ function closeModal() {
 // Form Submit
 async function handleSubmit(e) {
     e.preventDefault();
-    
+
+    if (isOffline) {
+        alert('You are offline. Changes cannot be saved until the server is reachable again.');
+        return;
+    }
+
     const name = nameInput ? nameInput.value.trim() : '';
+    const favicon = faviconInput ? faviconInput.value.trim() : '';
     const url = urlInput ? urlInput.value.trim() : '';
-    
+
     if (!url) {
         alert('URL is required');
         return;
     }
-    
+
     try {
         if (editingId) {
             // Update existing button
             const response = await fetch(`/api/buttons/${editingId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, url })
+                body: JSON.stringify({ name, url, favicon })
             });
-            
+
             if (response.ok) {
                 const updated = await response.json();
                 const index = buttons.findIndex(b => b.id === editingId);
                 if (index !== -1) {
                     buttons[index] = updated;
                 }
+                saveButtonsToCache();
             } else {
                 const error = await response.json();
                 alert(error.error || 'Failed to update button');
@@ -212,20 +378,21 @@ async function handleSubmit(e) {
             const response = await fetch('/api/buttons', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, url })
+                body: JSON.stringify({ name, url, favicon })
             });
-            
+
             if (response.ok) {
                 const newButton = await response.json();
                 buttons.push(newButton);
+                saveButtonsToCache();
             } else {
                 const error = await response.json();
                 alert(error.error || 'Failed to add button');
                 return;
             }
         }
-        
-        renderButtons();
+
+        await renderButtons();
         closeModal();
     } catch (error) {
         console.error('Failed to save button:', error);
@@ -235,6 +402,10 @@ async function handleSubmit(e) {
 
 // Edit Button
 function editButton(button) {
+    if (isOffline) {
+        alert('You are offline. Editing is disabled until the server is reachable again.');
+        return;
+    }
     openModal(button);
 }
 
@@ -244,9 +415,11 @@ async function deleteButton(id) {
         await fetch(`/api/buttons/${id}`, {
             method: 'DELETE'
         });
-        
+
         buttons = buttons.filter(b => b.id !== id);
-        renderButtons();
+        closeModal();
+        saveButtonsToCache();
+        await renderButtons();
     } catch (error) {
         console.error('Failed to delete button:', error);
     }
@@ -261,21 +434,22 @@ function saveButtons() {
 function restoreButtons(input) {
     const file = input.files[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = async function(e) {
         try {
-            const buttons = JSON.parse(e.target.result);
+            const data = JSON.parse(e.target.result);
             const response = await fetch('/api/buttons/restore', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(buttons)
+                body: JSON.stringify(data)
             });
-            
+
             if (response.ok) {
-                const data = await response.json();
-                buttons = Array.isArray(data) ? data : [];
-                renderButtons();
+                const restored = await response.json();
+                buttons = Array.isArray(restored) ? restored : [];
+                saveButtonsToCache();
+                await renderButtons();
                 alert('Buttons restored from file!');
             } else {
                 alert('Failed to restore buttons');

@@ -1,44 +1,37 @@
 [
   {
-    "id": 1773678707133,
-    "name": "Test Button",
-    "url": "https://test-example.com",
-    "clickCount": 1
-  },
-  {
-    "id": 1773678707232,
-    "name": "Example.com",
-    "url": "https://example.com",
-    "clickCount": 1
-  },
-  {
     "id": 1773678707304,
     "name": "Google.com",
     "url": "https://www.google.com",
-    "clickCount": 1
+    "clickCount": 1,
+    "favicon": "🔍"
   },
   {
     "id": 1774804637944,
     "name": "Index.hu",
     "url": "https://index.hu/",
-    "clickCount": 2
+    "clickCount": 2,
+    "favicon": "📰"
   },
   {
     "id": 1789247496613,
-    "name": "https://jellyfin.lugu.mywire.org/",
+    "name": "jellyfin.lugu",
     "url": "https://jellyfin.lugu.mywire.org/",
-    "clickCount": 0
+    "clickCount": 1,
+    "favicon": "/web/favicon.bc8d51405ec040305a87.ico"
   },
   {
     "id": 1789247768645,
     "name": "gemini",
     "url": "https://gemini.google.com/",
-    "clickCount": 0
+    "clickCount": 0,
+    "favicon": "✨"
   },
   {
     "id": 1789247781587,
     "name": "fj",
     "url": "https://git.lugu.mywire.org/",
-    "clickCount": 0
+    "clickCount": 3,
+    "favicon": "/assets/img/favicon.svg"
   }
 ]

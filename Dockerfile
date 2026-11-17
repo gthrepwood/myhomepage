@@ -17,7 +17,7 @@ COPY . .
 RUN mkdir -p data
 
 # Expose port
-EXPOSE 3005
+EXPOSE 3006
 
 # Start the application
 CMD ["npm", "start"]

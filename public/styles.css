@@ -307,6 +307,15 @@ body.dark-mode .resize-handle {
     height: auto;
 }
 
+.app-button .icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    min-width: 40px;
+    min-height: 40px;
+}
+
 .app-button .icon-text {
     border-radius: 12px;
     display: flex;
@@ -314,9 +323,10 @@ body.dark-mode .resize-handle {
     justify-content: center;
     font-size: 2rem;
     font-weight: bold;
-    margin-bottom: 10px;
     color: white;
-    text-transform: uppercase;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.35);
 }
 
 .app-button .name {
@@ -625,4 +635,11 @@ body.dark-mode .delete-btn {
 
 body.dark-mode .delete-btn:hover {
     background: #ff0000;
+}
+
+/* Offline / cached banner */
+.cached-banner {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-bottom: 8px;
 }

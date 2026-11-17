@@ -76,7 +76,7 @@ app.get('/api/buttons', (req, res) => {
 // POST - Add a new button
 app.post('/api/buttons', (req, res) => {
     try {
-        const { name, url } = req.body;
+        const { name, url, favicon } = req.body;
         
         if (!url) {
             return res.status(400).json({ error: 'URL is required' });
@@ -108,6 +108,7 @@ app.post('/api/buttons', (req, res) => {
             id: Date.now(),
             name: buttonName,
             url,
+            favicon: typeof favicon === 'string' ? favicon.trim() : '',
             clickCount: 0
         };
         
@@ -159,7 +160,7 @@ app.put('/api/buttons/reorder', (req, res) => {
 app.put('/api/buttons/:id', (req, res) => {
     try {
         const { id } = req.params;
-        const { name, url } = req.body;
+        const { name, url, favicon } = req.body;
         
         const buttons = getButtons();
         const index = buttons.findIndex(b => b.id == id);
@@ -171,7 +172,8 @@ app.put('/api/buttons/:id', (req, res) => {
         buttons[index] = {
             ...buttons[index],
             name: name || buttons[index].name,
-            url: url || buttons[index].url
+            url: url || buttons[index].url,
+            favicon: favicon !== undefined ? (typeof favicon === 'string' ? favicon.trim() : '') : (buttons[index].favicon || '')
         };
         
         saveButtons(buttons);

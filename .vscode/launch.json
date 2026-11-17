@@ -26,7 +26,7 @@
             "name": "Docker: Build & Up",
             "type": "shell",
             "request": "launch",
-            "command": "docker-compose up --build",
+            "command": "docker rm -f myhomepage 2>/dev/null; docker run -d --name myhomepage -p 3006:3006 -v /mnt/user/appdata/myhomepage/data:/app/data --restart unless-stopped docker.io/gthrepwood/myhomepage:latest",
             "console": "integratedTerminal",
             "presentation": {
                 "group": "docker",
@@ -37,7 +37,7 @@
             "name": "Docker: Up",
             "type": "shell",
             "request": "launch",
-            "command": "docker-compose up",
+            "command": "docker start myhomepage 2>/dev/null || docker run -d --name myhomepage -p 3006:3006 -v /mnt/user/appdata/myhomepage/data:/app/data --restart unless-stopped docker.io/gthrepwood/myhomepage:latest",
             "console": "integratedTerminal",
             "presentation": {
                 "group": "docker",
@@ -48,7 +48,7 @@
             "name": "Docker: Down",
             "type": "shell",
             "request": "launch",
-            "command": "docker-compose down",
+            "command": "docker rm -f myhomepage",
             "console": "integratedTerminal",
             "presentation": {
                 "group": "docker",
